@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="一个独立的电机正反转互锁教学演示：方向冲突、停机换向和急停复位。">
+  <title>Motor Interlock Lab · 电机正反转互锁实验</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="controller.js"></script><script defer src="app.js"></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">↔</span>Motor Interlock Lab</a><span class="tag">独立教学演示 / 01</span></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">ONE PROBLEM, ONE EXPERIMENT</p><h1>两个方向，<br>只允许一个输出。</h1><p class="intro-copy">从一个电机出发，看懂正反转互锁、停机换向和急停后的主动恢复。</p></div><div class="intro-note"><span>实验目标</span><p>先正常运行，<br>再主动制造一次冲突。</p><small>浏览器模型 · 不连接设备</small></div></section>
+    <div class="lab-grid">
+      <section class="panel machine-panel" aria-label="电机状态">
+        <div class="panel-head"><h2>电机与输送带</h2><span id="state" class="state-chip" role="status">待使能</span></div>
+        <div class="machine-scene" id="scene" data-direction="stopped">
+          <svg viewBox="0 0 640 300" role="img" aria-labelledby="scene-title scene-desc">
+            <title id="scene-title">自绘电机与输送带示意图</title><desc id="scene-desc">电机的方向随控制输出变化。方向冲突和急停时两个输出关闭。</desc>
+            <defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#d9e1dc" stroke-width=".7"/></pattern></defs>
+            <rect width="640" height="300" fill="url(#grid)"/><ellipse cx="332" cy="257" rx="250" ry="17" fill="#ccd8ce" opacity=".55"/>
+            <path d="M238 190H561V218H238Z" fill="#294a40"/><path d="M249 216V250M544 216V250" stroke="#8da196" stroke-width="13"/>
+            <rect x="236" y="148" width="329" height="43" rx="21" fill="#b8c8bc" stroke="#6c8576" stroke-width="2"/>
+            <path d="M257 169H544" stroke="#34594b" stroke-width="26" stroke-linecap="round"/>
+            <path class="belt-marks" d="M258 169H543" stroke="#91b29c" stroke-width="23" stroke-dasharray="3 22"/>
+            <rect x="350" y="110" width="54" height="39" rx="5" fill="#daab69"/><path d="M377 110V149M350 124H404" stroke="#b48349" stroke-width="2"/>
+            <path d="M174 187H236" stroke="#7d9486" stroke-width="11"/>
+            <rect x="91" y="145" width="98" height="80" rx="10" fill="#638873"/>
+            <path d="M102 156H166M102 169H166M102 182H166M102 195H166M102 208H166" stroke="#99b8a0" stroke-width="5"/>
+            <rect x="100" y="225" width="82" height="11" rx="3" fill="#345446"/>
+            <circle cx="189" cy="185" r="39" fill="#c7d7ca" stroke="#4d725d" stroke-width="3"/>
+            <g class="rotor"><circle cx="189" cy="185" r="25" fill="#f6f7ed" stroke="#8da895" stroke-width="2"/><path d="M189 166V204M170 185H208" stroke="#557c61" stroke-width="5"/><circle cx="189" cy="185" r="7" fill="#d8a464"/></g>
+            <text x="140" y="269" text-anchor="middle" fill="#5e7768" font-size="12">MOTOR / M1</text><text x="400" y="269" text-anchor="middle" fill="#5e7768" font-size="12">CONVEYOR</text>
+          </svg>
+          <div id="direction" class="direction-label">■ 停止</div>
+        </div>
+        <div class="signals"><div><span>正转请求</span><b id="in-forward">0</b></div><div><span>反转请求</span><b id="in-reverse">0</b></div><div class="output"><span>正转输出</span><b id="out-forward">0</b></div><div class="output"><span>反转输出</span><b id="out-reverse">0</b></div></div>
+        <div class="invariant"><span id="invariant-dot"></span><p id="invariant">互锁成立：两个方向输出不会同时为 1。</p></div>
+      </section>
+      <section class="panel control-panel" aria-label="操作区">
+        <div class="panel-head"><h2>操作台</h2><span class="caption">点击命令保持，停止命令清除</span></div>
+        <div class="controls"><button class="primary full" id="enable">① 使能控制</button><div class="button-row"><button id="forward">正向运行 →</button><button id="reverse">← 反向运行</button></div><button class="full" id="stop">■ 停止运行</button><div class="divider"></div><button id="conflict" class="full experiment">实验：同时请求正反转</button><button id="estop" class="full danger">紧急停止</button><div class="button-row"><button id="release">解除急停</button><button id="reset">复位控制</button></div><p id="feedback" class="feedback" role="status" aria-live="polite">先点击使能，然后选择一个方向。</p><div id="alarm" class="alarm" role="alert" hidden></div></div>
+      </section>
+    </div>
+    <section class="experiment-grid" aria-label="四个小实验">
+      <article><span>01 / 正常运行</span><h3>先停，再换向</h3><p>使能 → 正转 → 停止 → 反转。直接换向会被拦截，当前方向保持。</p></article>
+      <article><span>02 / 方向互锁</span><h3>冲突时全关断</h3><p>同时请求两个方向 → 两个输出为 0 → 复位 → 使能。停止命令不能清除锁定。</p></article>
+      <article><span>03 / 急停锁存</span><h3>解除后不自启</h3><p>运行 → 急停 → 解除急停 → 复位 → 使能 → 主动启动。</p></article>
+      <article><span>04 / 过程追踪</span><h3>让每次操作可见</h3><p>对照输入、输出和事件记录，验证互锁条件。最近 100 步可以导出 CSV。</p></article>
+    </section>
+    <section class="panel truth-panel"><div class="panel-head"><h2>方向互锁真值表</h2><span class="caption">已使能、无急停；持续运行中的换向另受状态机约束</span></div><div class="table-wrap"><table><thead><tr><th>正转请求</th><th>反转请求</th><th>正转输出</th><th>反转输出</th><th>结果</th></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>停止</td></tr><tr><td>1</td><td>0</td><td>1</td><td>0</td><td>正转</td></tr><tr><td>0</td><td>1</td><td>0</td><td>1</td><td>反转</td></tr><tr class="conflict-row"><td>1</td><td>1</td><td>0</td><td>0</td><td>冲突锁定</td></tr></tbody></table></div></section>
+    <section class="panel log-panel"><div class="panel-head"><h2>操作记录 <small id="log-count"></small></h2><button id="export" class="export">导出 CSV ↗</button></div><div class="table-wrap log-wrap"><table><thead><tr><th>步骤</th><th>操作</th><th>状态</th><th>正 / 反输出</th><th>说明</th></tr></thead><tbody id="events"></tbody></table></div></section>
+    <footer>Motor Interlock Lab · 界面与图形独立绘制。所有动作均为浏览器模拟；没有 PLC 通讯或设备控制。刷新页面会清空会话。</footer>
+  </main>
+</body>
+</html>

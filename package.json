@@ -1,0 +1,13 @@
+{
+  "name": "motor-interlock-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "独立的电机正反转互锁可视化教学演示",
+  "license": "MIT",
+  "scripts": {
+    "start": "node tools/serve.cjs",
+    "test": "node --test tests/controller.test.cjs",
+    "build": "node tools/build.cjs"
+  },
+  "engines": { "node": ">=18" }
+}

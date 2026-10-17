@@ -1,5 +1,9 @@
 # Motor Interlock Lab｜电机正反转互锁实验
 
+[![Validate](https://github.com/ton242678-glitch/motor-interlock-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/ton242678-glitch/motor-interlock-lab/actions/workflows/ci.yml)
+
+### [▶ 在线体验电机互锁实验](https://ton242678-glitch.github.io/motor-interlock-lab/)
+
 一个聚焦单个控制问题的自动化教学作品：**如何让电机正转、反转始终互斥，并在方向冲突和急停后要求主动恢复。**
 
 [项目仓库](https://github.com/ton242678-glitch/motor-interlock-lab) · [功能拆解](docs/功能拆解.md) · [MIT 许可](LICENSE)
